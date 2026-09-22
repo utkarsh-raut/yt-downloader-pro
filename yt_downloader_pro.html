@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Downloader Pro - Video & Thumbnail Extractor</title>
+    
+    <!-- Production SEO & Meta Tags -->
+    <meta name="description" content="Free, fast, and secure YouTube video and high-quality thumbnail downloader. No ads, no limits.">
+    <meta name="keywords" content="youtube downloader, download youtube videos, youtube thumbnail download, mp4, mp3, free, fast">
+    <meta name="author" content="YT Downloader Pro">
+    
+    <!-- Open Graph / Social Media Integration -->
+    <meta property="og:title" content="YT Downloader Pro">
+    <meta property="og:description" content="Download YouTube videos and HD thumbnails instantly in the highest quality.">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#FF0000">
+    
+    <!-- Favicon (Inline SVG for zero dependencies) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔴</text></svg>">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        yt: {
+                            red: '#FF0000',
+                            dark: '#0F0F0F',
+                            card: '#272727',
+                            hover: '#3F3F3F',
+                            text: '#F1F1F1',
+                            muted: '#AAAAAA'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.4s ease-out',
+                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0F0F0F;
+            color: #F1F1F1;
+            /* Subtle radial gradient background */
+            background-image: radial-gradient(circle at 50% 0%, rgba(255, 0, 0, 0.05) 0%, transparent 50%);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F0F0F;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3F3F3F;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF0000;
+        }
+
+        .glass-panel {
+            background: rgba(39, 39, 39, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            color: white;
+            border-bottom: 2px solid #FF0000;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #FF0000;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #272727 25%, #3f3f3f 50%, #272727 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+
+    <main class="container mx-auto px-4 py-12 max-w-4xl min-h-screen flex flex-col items-center justify-center">
+        
+        <!-- Header -->
+        <div class="text-center mb-10 w-full animate-fade-in">
+            <div class="inline-flex items-center justify-center p-3 bg-yt-red/10 rounded-full mb-4">
+                <i class="fa-brands fa-youtube text-4xl text-yt-red"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3">
+                YT <span class="text-yt-red">Downloader</span> Pro
+            </h1>
+            <p class="text-yt-muted text-lg max-w-xl mx-auto">
+                Download YouTube videos in high quality or extract stunning HD thumbnails instantly.
+            </p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="w-full glass-panel rounded-2xl p-6 md:p-8 shadow-2xl shadow-black/50 animate-slide-up">
+            
+            <!-- Input Section -->
+            <div class="mb-8">
+                <label for="yt-url" class="block text-sm font-medium text-yt-muted mb-2">Paste YouTube URL here:</label>
+                <div class="relative flex items-center group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-link text-yt-muted group-focus-within:text-yt-red transition-colors"></i>
+                    </div>
+                    <input type="text" id="yt-url" 
+                        class="block w-full pl-11 pr-32 py-4 bg-yt-dark border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yt-red focus:border-transparent transition-all"
+                        placeholder="https://www.youtube.com/watch?v=...">
+                    
+                    <div class="absolute inset-y-0 right-2 flex items-center gap-2">
+                        <button id="paste-btn" class="p-2 text-yt-muted hover:text-white transition-colors rounded-lg hover:bg-yt-hover" title="Paste from clipboard">
+                            <i class="fa-solid fa-clipboard"></i>
+                        </button>
+                        <button id="fetch-btn" class="bg-yt-red hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2">
+                            <span>Fetch</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="error-msg" class="hidden text-red-400 text-sm mt-2 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>Invalid YouTube URL. Please check and try again.</span>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div id="tabs-container" class="hidden border-b border-gray-700 mb-6 flex gap-6">
+                <button class="tab-btn active pb-3 text-lg font-medium text-yt-muted flex items-center gap-2" data-target="video-tab">
+                    <i class="fa-solid fa-film"></i> Video Download
+                </button>
+                <button class="tab-btn pb-3 text-lg font-medium text-yt-muted flex items-center gap-2" data-target="thumb-tab">
+                    <i class="fa-solid fa-image"></i> Thumbnails
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="hidden flex flex-col items-center justify-center py-12">
+                <div class="loader mb-4"></div>
+                <p class="text-yt-muted animate-pulse">Extracting media data...</p>
+            </div>
+
+            <!-- Results Area -->
+            <div id="results-area" class="hidden">
+                
+                <!-- Shared Header for Video info -->
+                <div class="flex flex-col md:flex-row gap-6 mb-8 p-4 bg-yt-dark rounded-xl border border-gray-800 relative shadow-lg">
+                    <!-- Start Over / Reset Button -->
+                    <button id="reset-btn" class="absolute top-2 right-2 text-yt-muted hover:text-white transition-all w-8 h-8 flex items-center justify-center rounded-lg hover:bg-yt-hover hover:rotate-90 z-10 bg-yt-dark/80 backdrop-blur" title="Download another video">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                    
+                    <div class="w-full md:w-1/3 aspect-video rounded-lg overflow-hidden relative group skeleton" id="preview-container">
+                        <img id="video-preview-img" src="" alt="Thumbnail Preview" class="w-full h-full object-cover hidden transition-transform duration-500 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center transition-opacity opacity-0 group-hover:opacity-100">
+                            <i class="fa-brands fa-youtube text-4xl text-white/80"></i>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-2/3 flex flex-col justify-center">
+                        <h2 id="video-title" class="text-xl font-bold line-clamp-2 mb-2 text-white">Video Title Loading...</h2>
+                        <div class="flex items-center gap-3 text-sm text-yt-muted">
+                            <span id="video-id-badge" class="bg-yt-hover px-2 py-1 rounded text-xs font-mono"></span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-check-circle text-green-500"></i> Ready</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Video -->
+                <div id="video-tab" class="tab-content active">
+                    <div class="bg-yt-dark border border-gray-800 rounded-xl overflow-hidden p-1">
+                        <div class="p-4 border-b border-gray-800 bg-yt-card/50">
+                            <h3 class="font-semibold text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-download text-yt-red"></i> Available Formats
+                            </h3>
+                            <p class="text-xs text-yt-muted mt-1">Select your preferred quality. Conversion might take a few moments.</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4" id="video-download-options">
+                            <!-- Options will be injected here via JS -->
+                        </div>
+                        
+                        <div class="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg m-4 flex gap-3 text-sm text-blue-200">
+                            <i class="fa-solid fa-info-circle mt-0.5 text-blue-400"></i>
+                            <p>Downloads are processed securely via a 3rd-party API. Pop-ups may occasionally appear from the provider.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Thumbnails -->
+                <div id="thumb-tab" class="tab-content">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="thumbnail-grid">
+                        <!-- Thumbnail cards injected here via JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-sm text-yt-muted pb-8 flex flex-col items-center gap-5">
+            <p>Built for educational purposes. Please respect copyright laws.</p>
+            
+            <!-- Buy Me A Coffee Button -->
+            <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-[#FFDD00] text-black px-5 py-2.5 rounded-xl font-bold hover:bg-[#FFEA4C] transition-all duration-300 hover:scale-105 shadow-[0_0_15px_rgba(255,221,0,0.3)]">
+                <i class="fa-solid fa-mug-hot"></i> Support this free tool
+            </a>
+
+            <!-- Placeholder for Future VPN Banner (Hidden for now) -->
+            <!-- 
+            <a href="YOUR_VPN_AFFILIATE_LINK" target="_blank" class="mt-4 border border-blue-500/30 bg-blue-500/10 text-blue-300 px-4 py-2 rounded-lg hover:bg-blue-500/20 transition-colors text-xs flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved"></i> Download anonymously? Get 60% off NordVPN.
+            </a> 
+            -->
+        </footer>
+    </main>
+
+    <script>
+        // DOM Elements
+        const urlInput = document.getElementById('yt-url');
+        const pasteBtn = document.getElementById('paste-btn');
+        const fetchBtn = document.getElementById('fetch-btn');
+        const errorMsg = document.getElementById('error-msg');
+        
+        const tabsContainer = document.getElementById('tabs-container');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        const loadingState = document.getElementById('loading-state');
+        const resultsArea = document.getElementById('results-area');
+        
+        const previewImg = document.getElementById('video-preview-img');
+        const previewContainer = document.getElementById('preview-container');
+        const videoTitle = document.getElementById('video-title');
+        const videoIdBadge = document.getElementById('video-id-badge');
+        
+        const videoOptionsContainer = document.getElementById('video-download-options');
+        const thumbnailGrid = document.getElementById('thumbnail-grid');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Current State
+        let currentVideoId = null;
+
+        // --- Utility Functions ---
+
+        /**
+         * Extracts YouTube video ID from various URL formats
+         */
+        function extractVideoID(url) {
+            // Enhanced regex to handle standard, shorts, live, and youtu.be links
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        /**
+         * Formats strings nicely
+         */
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag])
+            );
+        }
+
+        // --- Event Listeners ---
+
+        // Handle Paste Button
+        pasteBtn.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                urlInput.value = text;
+                urlInput.focus();
+                // Optionally auto-fetch if it looks like a valid URL
+                if(extractVideoID(text)) {
+                    processURL();
+                }
+            } catch (err) {
+                // Clipboard API might be blocked in iframe/some browsers without permission
+                const fallbackMsg = document.createElement('div');
+                fallbackMsg.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg z-50 text-sm animate-slide-up';
+                fallbackMsg.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-2"></i> Clipboard access denied. Please paste manually (Ctrl+V).';
+                document.body.appendChild(fallbackMsg);
+                setTimeout(() => fallbackMsg.remove(), 3000);
+            }
+        });
+
+        // Handle Fetch Button & Enter Key
+        fetchBtn.addEventListener('click', processURL);
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') processURL();
+        });
+
+        // Handle Tabs
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active classes
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active to clicked
+                btn.classList.add('active');
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+        // Handle Reset (Start Over)
+        resetBtn.addEventListener('click', () => {
+            // Animate out
+            resultsArea.classList.remove('animate-slide-up');
+            resultsArea.classList.add('hidden');
+            tabsContainer.classList.add('hidden');
+            
+            // Clear inputs and state
+            urlInput.value = '';
+            currentVideoId = null;
+            
+            // Reset Preview UI
+            previewImg.src = '';
+            previewImg.classList.add('hidden');
+            previewContainer.classList.add('skeleton');
+            videoTitle.textContent = 'Video Title Loading...';
+            
+            // Focus back on input
+            setTimeout(() => {
+                urlInput.focus();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
+        });
+
+        <!-- Core Logic -->
+
+        function processURL() {
+            const url = urlInput.value.trim();
+            if (!url) return;
+
+            const videoId = extractVideoID(url);
+            
+            if (!videoId) {
+                errorMsg.classList.remove('hidden');
+                urlInput.classList.add('border-red-500', 'focus:ring-red-500');
+                tabsContainer.classList.add('hidden');
+                resultsArea.classList.add('hidden');
+                return;
+            }
+
+            // Valid ID
+            errorMsg.classList.add('hidden');
+            urlInput.classList.remove('border-red-500', 'focus:ring-red-500');
+            currentVideoId = videoId;
+            
+            // UI Transitions
+            resultsArea.classList.add('hidden');
+            tabsContainer.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            // Simulate slight delay for fetching metadata (and let images load)
+            setTimeout(() => {
+                renderResults(videoId, url);
+            }, 800);
+        }
+
+        async function renderResults(videoId, originalUrl) {
+            // Set basic info
+            videoIdBadge.textContent = videoId;
+            
+            // Try to fetch title via oEmbed
+            try {
+                const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+                const response = await fetch(oembedUrl);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Fix: Properly decode HTML entities by assigning to innerHTML instead of textContent
+                    videoTitle.innerHTML = data.title;
+                } else {
+                    videoTitle.textContent = `YouTube Video (${videoId})`;
+                }
+            } catch (e) {
+                videoTitle.textContent = `YouTube Video (${videoId})`;
+            }
+
+            // Setup preview Image (Max Res)
+            const maxResUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+            const hqUrl = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`; // Fallback
+            
+            previewImg.onload = () => {
+                previewImg.classList.remove('hidden');
+                previewContainer.classList.remove('skeleton');
+            };
+            
+            // Error handling for maxresdefault (some videos don't have it)
+            previewImg.onerror = () => {
+                if (previewImg.src !== hqUrl) {
+                    previewImg.src = hqUrl;
+                }
+            };
+            
+            previewImg.src = maxResUrl;
+
+            // Generate Video Download Options
+            generateVideoOptions(videoId, originalUrl);
+
+            // Generate Thumbnail Download Options
+            generateThumbnailOptions(videoId);
+
+            // Show UI
+            loadingState.classList.add('hidden');
+            tabsContainer.classList.remove('hidden');
+            resultsArea.classList.remove('hidden');
+            resultsArea.classList.add('animate-slide-up');
+        }
+
+        function generateVideoOptions(videoId, url) {
+            videoOptionsContainer.innerHTML = '';
+            
+            const cleanUrl = encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`);
+            const ssUrl = `https://ssyoutube.com/en/?url=https://www.youtube.com/watch?v=${videoId}`;
+
+            // Replace the broken iframe with a more reliable set of direct external download links
+            // We use direct links to reliable external services since client-side video decryption is not possible.
+            
+            const directLinksWrapper = document.createElement('div');
+            directLinksWrapper.className = 'col-span-1 md:col-span-2 bg-yt-card rounded-lg p-5 border border-gray-700/50';
+            directLinksWrapper.innerHTML = `
+                <h4 class="font-medium mb-4 flex items-center gap-2 text-white"><i class="fa-solid fa-cloud-arrow-down text-yt-red"></i> External Download Servers</h4>
+                <p class="text-sm text-yt-muted mb-5">Click a button below to process and download this video using our trusted partner sites.</p>
+                
+                <div class="flex flex-col gap-3">
+                    <a href="https://en.loader.to/4/?link=${cleanUrl}&f=mp4&s=1&e=1&r=1080" target="_blank" rel="noopener noreferrer" 
+                       class="w-full bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-gray-600 hover:border-blue-500 text-white py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-between group">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-blue-500/20 p-2 rounded-lg text-blue-400 group-hover:text-blue-300 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-video"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-semibold">Loader.to (1080p / 4K)</div>
+                                <div class="text-xs text-gray-400">High Quality Video Download</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-gray-500 group-hover:text-white"></i>
+                    </a>
+                    
+                    <a href="https://en.loader.to/4/?link=${cleanUrl}&f=mp3&s=1&e=1" target="_blank" rel="noopener noreferrer" 
+                       class="w-full bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-gray-600 hover:border-purple-500 text-white py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-between group">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-purple-500/20 p-2 rounded-lg text-purple-400 group-hover:text-purple-300 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-music"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-semibold">Audio Only (MP3)</div>
+                                <div class="text-xs text-gray-400">Extract audio from the video</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-gray-500 group-hover:text-white"></i>
+                    </a>
+
+                    <a href="${ssUrl}" target="_blank" rel="noopener noreferrer" 
+                       class="w-full bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-gray-600 hover:border-green-500 text-white py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-between group">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-500/20 p-2 rounded-lg text-green-400 group-hover:text-green-300 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="font-semibold">SSYouTube (Alternative Server)</div>
+                                <div class="text-xs text-gray-400">Fast alternative routing</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-gray-500 group-hover:text-white"></i>
+                    </a>
+                </div>
+            `;
+            videoOptionsContainer.appendChild(directLinksWrapper);
+        }
+
+        function generateThumbnailOptions(videoId) {
+            thumbnailGrid.innerHTML = '';
+            
+            const qualities = [
+                { res: '1080p (Max)', file: 'maxresdefault.jpg', desc: 'Highest quality available' },
+                { res: '720p (HD)', file: 'sddefault.jpg', desc: 'Standard definition' },
+                { res: '480p (HQ)', file: 'hqdefault.jpg', desc: 'High quality default' },
+                { res: '320p (MQ)', file: 'mqdefault.jpg', desc: 'Medium quality' }
+            ];
+
+            qualities.forEach(q => {
+                const imgUrl = `https://i.ytimg.com/vi/${videoId}/${q.file}`;
+                
+                const card = document.createElement('div');
+                card.className = 'bg-yt-card border border-gray-800 rounded-xl overflow-hidden hover:border-gray-600 transition-colors flex flex-col group';
+                
+                card.innerHTML = `
+                    <div class="relative aspect-video overflow-hidden bg-black">
+                        <img src="${imgUrl}" alt="${q.res}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                             onerror="this.src='https://i.ytimg.com/vi/${videoId}/hqdefault.jpg'; this.onerror=null;">
+                        <div class="absolute top-2 left-2 bg-black/70 backdrop-blur text-xs px-2 py-1 rounded text-white font-medium">
+                            ${q.res}
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <p class="text-xs text-yt-muted mb-3">${q.desc}</p>
+                        <button onclick="downloadThumbnail('${imgUrl}', 'thumbnail_${videoId}_${q.res.split(' ')[0]}.jpg')" 
+                                class="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg font-medium transition-colors flex justify-center items-center gap-2 text-sm">
+                            <i class="fa-solid fa-download"></i> Download Image
+                        </button>
+                    </div>
+                `;
+                thumbnailGrid.appendChild(card);
+            });
+        }
+
+        /**
+         * Downloads the thumbnail.
+         * Tries to fetch via CORS proxy to force download dialog.
+         * Falls back to opening in a new tab if fetch fails.
+         */
+        async function downloadThumbnail(url, filename) {
+            const btn = event.currentTarget;
+            const btnIcon = btn.querySelector('i');
+            const originalClass = btnIcon.className;
+            
+            try {
+                // Loading UI
+                btnIcon.className = 'fa-solid fa-circle-notch fa-spin';
+                
+                // Using corsproxy.io as it handles binary data better
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+                
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("Network response was not ok");
+                
+                const blob = await response.blob();
+                
+                if (blob.type.includes('text/html') || blob.size === 0) {
+                    throw new Error("Invalid content type or empty blob");
+                }
+
+                const objectUrl = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = objectUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                URL.revokeObjectURL(objectUrl);
+                
+            } catch (err) {
+                console.warn('Direct download failed, falling back to new tab:', err);
+                
+                // Custom Toast Notification
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-3 rounded shadow-lg z-50 text-sm animate-slide-up flex flex-col gap-1 border border-gray-700';
+                toast.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-blue-400"></i>
+                        <span class="font-medium">Direct download blocked.</span>
+                    </div>
+                    <span class="text-gray-400 text-xs ml-6">Opening image in new tab. Right-click (or long press) to save.</span>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 5000);
+
+                // Fallback: Open in new tab.
+                window.open(url, '_blank');
+            } finally {
+                // Restore icon
+                btnIcon.className = originalClass;
+            }
+        }
+    </script>
+</body>
+</html>
